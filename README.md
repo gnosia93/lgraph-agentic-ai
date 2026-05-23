@@ -94,5 +94,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
 * [pytorch tutorials](https://www.youtube.com/playlist?list=PLhhyoLH6IjfxeoooqP9rhU3HJIAVAJ3Vz)
 
 
+## todo ##
+* Open Source LLM 인퍼런스 워크샵 / EKS.
 
 
