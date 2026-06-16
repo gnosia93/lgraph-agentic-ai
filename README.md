@@ -77,7 +77,8 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
 
 * [Prometheus / Loki Stack](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/a2-prometheus-loki.md)   
 * [AI Engineering - Prompt/Context/Harness](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/a5.harness-eng.md)
-* [promptfoo 로 모델 평가하기](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/a7.promptfoo.md)
+* [promptfoo로 모델 평가하기](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/a7.promptfoo.md)
+* [promptfoo로 해킹하기](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/a7.promptfoo-security.md)
 * [TensorRT-LLM Speculative 디코딩](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/a8-speculative-decoding.md)
 * [Neo4j로 지식 그래프 구현하기 (온톨로지)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/a9-ontology-neo4j.md)      
 * Agentic AI
