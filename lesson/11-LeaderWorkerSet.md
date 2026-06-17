@@ -80,17 +80,24 @@ replicaset.apps/lws-controller-manager-567cc75d78   2         2         2       
 ```
 aws ec2 describe-instance-types \
   --instance-types g7e.48xlarge \
-  --query 'InstanceTypes[].NetworkInfo.{MaxNetworkCards:MaximumNetworkCards, EfaSupported:EfaSupported, MaxEfaInterfaces:EfaInfo.MaximumEfaInterfaces}' \
-  --region ap-northeast-2
-[
-    {
-        "MaxNetworkCards": 4,
-        "EfaSupported": true,
-        "MaxEfaInterfaces": 4
-    }
-]
+  --query 'InstanceTypes[].NetworkInfo.NetworkCards[].{Index:NetworkCardIndex, Baseline:BaselineBandwidthInGbps, Peak:PeakBandwidthInGbps, MaxENI:MaximumNetworkInterfaces}' \
+  --region ap-northeast-2 \
+  --output table
 ```
-
+[결과]
+```
+------------------------------------------
+|          DescribeInstanceTypes         |
++-----------+--------+---------+---------+
+| Baseline  | Index  | MaxENI  |  Peak   |
++-----------+--------+---------+---------+
+|  400.0    |  0     |  10     |  400.0  |
+|  400.0    |  1     |  10     |  400.0  |
+|  400.0    |  2     |  10     |  400.0  |
+|  400.0    |  3     |  10     |  400.0  |
++-----------+--------+---------+---------+
+```
+g7e.48xlarge 의 경우 EFA 인터페이스가 400Mbps 로 4개인 것을 확인할 수 있다. 
 
 ## Llama 3.1 405B 배포하기 ##
 다음은 vLLM으로 Llama 3.1 405B를 2노드에 걸쳐 서빙하는 예제이다.
