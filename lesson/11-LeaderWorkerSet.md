@@ -261,21 +261,15 @@ EFA를 실제로 쓰려면 vllm/vllm-openai 이미지를 AWS 가 제공하는 vL
 * [Amazon EKS에서vLLM Deep Learning Container를 사용하여LLM 배포하기](https://aws.amazon.com/ko/blogs/tech/deploy-llms-on-amazon-eks-using-vllm-deep-learning-containers/)
 * https://github.com/aws-samples/sample-aws-deep-learning-containers/blob/main/vllm-samples/deepseek/eks/vllm-deepseek-32b-lws.yaml
     
-### 조회하기 ###
+### 인퍼런스 테스트 ###
 ```
-
-
-
-```
-
-### Pod 복구 테스트 하기 ###
-```
-
-
 
 ```
 
+### Pod 복구 테스트 ###
+```
 
+```
 
 ## 마치며 ##
 LWS는 "대형 LLM 분산 추론을 선언적으로 관리하고 싶다"라는 요구에서 출발해, 기존 StatefulSet + Service + Init Container 조합의 구성을 간결하게 바꿀 수 있다. 특히 vLLM 커뮤니티가 LWS를 표준 배포 방식으로 채택하고 있어서, 생태계 호환성 측면에서도 이점이 있다.
