@@ -222,6 +222,28 @@ EOF
 ```
 눈여겨 볼점은 리더와 워커의 `명령어셋이 다르다는 점`으로, 리더는 Ray 클러스터를 시작하고 vLLM 서버를 띄우고, 워커는 리더가 띄운 Ray에 조인만 한다.
 
+#### 리더가 하는 일 ####
+```
+bash ray_init.sh leader --ray_cluster_size=$LWS_GROUP_SIZE   # ① Ray 헤드 노드 시작
+python -m vllm...api_server --tensor-parallel-size=8 \        # ② vLLM 서버 시작
+  --pipeline-parallel-size=2 --distributed-executor-backend=ray
+```
+① 먼저 Ray 클러스터의 헤드(head) 노드를 띄운다. ② 그다음 그 위에서 vLLM API 서버를 실행한다.
+
+#### 워커가 하는 일 ####
+```
+bash ray_init.sh worker --ray_address=$LWS_LEADER_ADDRESS   # Ray 워커로 헤드에 합류
+```
+리더(헤드)의 주소로 Ray 클러스터에 워커 노드로 참여만 합니다. vLLM 서버는 띄우지 않는다.
+
+여기서 중요한 게 --distributed-executor-backend=ray 파라미터이다. vLLM은 "여러 노드에 vLLM을 여러 개 띄워서" 분산하는 게 아니라, vLLM 서버는 논리적으로 딱 하나이고, 그 하나가 Ray를 통해 클러스터 전체의 GPU에 모델을 펼쳐서 실행하게 된다.
+vLLM 서버(API 엔드포인트, 요청 스케줄링, 전체 오케스트레이션) 는 리더(Ray 헤드)에서 실행되고, 실제 모델 연산(GPU 계산): 리더 + 워커의 모든 GPU에 분산되어 실행되게 된다.(Ray가 워커 GPU로 작업을 보냄)
+
+이 매니페스트는 tensor-parallel-size=8, pipeline-parallel-size=2로 TP 8 × PP 2 = 16개 GPU가 필요한데, 노드 하나가 GPU 8개니까 2개 노드(리더 1 + 워커 1, size: 2)가 묶여야 16개가 된다. 리더의 vLLM이 Ray를 통해 이 16개 GPU(리더 8 + 워커 8)를 전부 끌어다 모델 하나를 돌리는 것이다.
+
+요청 흐름을 보면, 클라이언트는 리더의 8000 포트(vLLM API)로만 요청을 보내고, 리더의 vLLM이 Ray를 통해 워커 GPU까지 동원해 추론한 뒤 응답을 돌려둥가.(워커로는 직접 요청이 가지 않는다)
+이게 바로 앞서 설명한 LWS의 "리더 = 진입점, 워커 = 연산 담당"이라는 역할 분리가 실제 vLLM/Ray 구성에서 구현된 모습이다.
+
 ### 조회하기 ###
 ```
 
