@@ -76,6 +76,20 @@ replicaset.apps/lws-controller-manager-567cc75d78   2         2         2       
 
 
 
+## EFA 인터페이스 갯수 확인 ##
+```
+aws ec2 describe-instance-types \
+  --instance-types g7e.48xlarge \
+  --query 'InstanceTypes[].NetworkInfo.{MaxNetworkCards:MaximumNetworkCards, EfaSupported:EfaSupported, MaxEfaInterfaces:EfaInfo.MaximumEfaInterfaces}' \
+  --region ap-northeast-2
+[
+    {
+        "MaxNetworkCards": 4,
+        "EfaSupported": true,
+        "MaxEfaInterfaces": 4
+    }
+]
+```
 
 
 ## Llama 3.1 405B 배포하기 ##
@@ -90,7 +104,7 @@ replicaset.apps/lws-controller-manager-567cc75d78   2         2         2       
 * g7e.48xlarge 또는 p5.48xlarge 노드 2대 확보 (NVLink 를 지원하는 p5 시리즈 선호)
 * 두 노드 같은 placement group 소속
 * EFA device plugin 설치됨
-*  NVIDIA device plugin 설치됨
+* NVIDIA device plugin 설치됨
 
 llm-serving 네임스페이스를 먼저 생성한다.
 ```
