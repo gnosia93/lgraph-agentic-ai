@@ -162,7 +162,7 @@ spec:
             resources:
               limits:
                 nvidia.com/gpu: 8
- #               vpc.amazonaws.com/efa: 32
+                vpc.amazonaws.com/efa: 4
  #               memory: 1000Gi
  #               cpu: "48"
             ports:
@@ -216,7 +216,7 @@ spec:
             resources:
               limits:
                 nvidia.com/gpu: 8
-#                vpc.amazonaws.com/efa: 32
+                vpc.amazonaws.com/efa: 4
 #                memory: 1000Gi
 #                cpu: "48"
             volumeMounts:
