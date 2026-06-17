@@ -243,7 +243,7 @@ EOF
 ```
 눈여겨 볼점은 리더와 워커의 `명령어셋이 다르다는 점`으로, 리더는 Ray 클러스터를 시작하고 vLLM 서버를 띄우고, 워커는 리더가 띄운 Ray에 조인만 한다.
 
-#### 리더가 하는 일 ####
+#### 리더의 역할 ####
 ```
 bash ray_init.sh leader --ray_cluster_size=$LWS_GROUP_SIZE   # ① Ray 헤드 노드 시작
 python -m vllm...api_server --tensor-parallel-size=8 \        # ② vLLM 서버 시작
@@ -251,7 +251,7 @@ python -m vllm...api_server --tensor-parallel-size=8 \        # ② vLLM 서버 
 ```
 ① 먼저 Ray 클러스터의 헤드(head) 노드를 띄운다. ② 그다음 그 위에서 vLLM API 서버를 실행한다.
 
-#### 워커가 하는 일 ####
+#### 워커의 역할 ####
 ```
 bash ray_init.sh worker --ray_address=$LWS_LEADER_ADDRESS   # Ray 워커로 헤드에 합류
 ```
