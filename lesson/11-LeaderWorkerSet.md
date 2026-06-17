@@ -72,7 +72,7 @@ NAME                                                DESIRED   CURRENT   READY   
 replicaset.apps/lws-controller-manager-567cc75d78   2         2         2       65s
 ```
 
-## EFA 확인 및 fsx 드라이버(pv/pvc) 설치 ##
+## fsx 드라이버(pv/pvc) 설치 ##
 
 
 
