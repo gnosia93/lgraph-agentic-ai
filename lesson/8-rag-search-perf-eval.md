@@ -54,6 +54,8 @@ RAG 파이프라인의 품질은 다음 세 가지 축으로 평가합니다.
 
 RAG 시스템은 무작정 개발하는 것보다 이 평가 판을 먼저 짜놓고 파라미터(Chunk size, Overlap, Top-K, LLM temperature 등)를 미세 조정(A/B Test)하는 것이 전체 개발 기간을 대폭 줄이는 지름길입니다.
 
+
+![](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/images/rag-strategy.png)
 ```
 RAG 파이프라인을 구축할 때 가장 많이 하는 실수가 **"모든 데이터에 똑같은 텍스트 분할기(RecursiveCharacterTextSplitter)와 기본 임베딩"**을 적용하는 것입니다.
 데이터의 형태(Text, Table, Code, Log 등)에 따라 검색기(Retriever)가 멍청해지는 이유가 완전히 다르기 때문에, 데이터 맞춤형 턱밑 처방이 들어가야 합니다. 실무에서 바로 쓸 수 있는 데이터 유형별 검색 품질 최적화 팁을 정리해 드립니다.
