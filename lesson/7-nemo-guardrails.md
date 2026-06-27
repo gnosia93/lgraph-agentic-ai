@@ -1,6 +1,5 @@
 
 NVIDIA NeMo Guardrails는 LLM 기반 애플리케이션의 입력(Prompt Injection, 욕설 등)과 출력(환각, 탈옥, 오프토픽 등)을 제어하기 위한 프로그래머블 가드레일 오픈소스 툴킷입니다. 엔지니어링 관점에서 결정적 제어(Deterministic Control) 파이프라인을 구축할 때 아주 유용합니다.
-NeMo Guardrails의 핵심 아키텍처와 구체적인 사용법을 3단계로 핵심만 정리해 드릴게요.
 
 ### 📂 1. 프로젝트 기본 구조 세팅 ###
 NeMo Guardrails는 Python 코드 내부가 아니라, **별도의 설정 폴더(config)**를 만들고 그 안에 **YAML 파일(모델 및 레일 설정)**과 **Colang 파일(대화 흐름 정의)**을 선언하는 방식으로 동작합니다.
