@@ -48,7 +48,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
    - [NVIDIA NeMo Guardrails](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/7-nemo-guardrails.md)
      
 * [L8. AI 시스템 평가 파이프라인](https://github.com/gnosia93/agentic-ai-eks/blob/main/lesson/8.eval-framework.md)
-   - RAG 검색 품질 평가
+   - [RAG 검색 품질 평가](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/8-rag-search-perf-eval.md)
    - LLM 답변 품질 평가
    - 에이전트 행동 평가 (tool 선택, 실행 순서)
    - 골든 데이터셋 구축
