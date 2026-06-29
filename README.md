@@ -74,7 +74,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
      
 * [L12. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/12-post-training.md)
 
-* L13. Request Routing
+* L13. 서빙 최적화
    - [Prefix Aware Routing](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-prefix-aware-routing.md)
 
 
