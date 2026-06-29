@@ -51,8 +51,61 @@ BEDROCK_MODEL_ID는 사용 중인 계정에서 접근 가능한 모델로 지정
 
 
 ### 3. 트레이스 설정 ###
-— @observe + start_as_current_generation + update, 계측 핵심 3줄 설명, OpenAI 드롭인 대안
-- 멀티스텝 트레이싱
+
+LLM 호출 코드에 Langfuse를 연결한다. 함수 단위 트레이싱에는 observe 데코레이터를, LLM 호출 기록에는 start_as_current_generation 컨텍스트 매니저를 사용한다.
+
+```python
+import os
+import boto3
+from langfuse import observe, get_client
+
+langfuse = get_client()
+
+REGION = os.environ.get("AWS_REGION", "us-west-2")
+MODEL_ID = os.environ.get(
+    "BEDROCK_MODEL_ID",
+    "us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+)
+bedrock = boto3.client("bedrock-runtime", region_name=REGION)
+
+@observe()
+def ask(question: str) -> str:
+    with langfuse.start_as_current_generation(
+        name="bedrock-converse",
+        model=MODEL_ID,
+        input=question,
+    ) as generation:
+
+        response = bedrock.converse(
+            modelId=MODEL_ID,
+            messages=[{"role": "user", "content": [{"text": question}]}],
+            inferenceConfig={"maxTokens": 512, "temperature": 0.7},
+        )
+
+        answer = response["output"]["message"]["content"][0]["text"]
+        usage = response.get("usage", {})
+
+        generation.update(
+            output=answer,
+            usage_details={
+                "input": usage.get("inputTokens", 0),
+                "output": usage.get("outputTokens", 0),
+                "total": usage.get("totalTokens", 0),
+            },
+        )
+
+    return answer
+
+
+if __name__ == "__main__":
+    print(ask("옵저버빌리티가 필요한 이유를 한 문장으로 설명해줘."))
+    langfuse.flush()
+```
+
+코드의 동작은 다음과 같다. observe 데코레이터는 ask 함수의 호출 한 건을 하나의 Trace로 만든다. start_as_current_generation은 해당 Trace 안에 LLM 호출을 나타내는 Generation을 생성하며, 호출 전에 모델 ID와 입력을 기록한다. Bedrock 응답을 받은 뒤 generation.update로 출력과 토큰 사용량을 채우면, Langfuse가 이를 기반으로 비용과 지연을 계산한다.
+
+마지막의 langfuse.flush 호출은 필수다. Langfuse는 성능을 위해 데이터를 버퍼에 모아 비동기로 전송하므로, 짧게 종료되는 스크립트에서는 flush로 버퍼를 비우지 않으면 데이터가 전송되지 않는다.
+
   
 ### 4. 관측 ### 
 — 대시보드에서 입력/출력/지연/토큰/비용 확인
