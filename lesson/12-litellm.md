@@ -91,3 +91,7 @@ model_list:
       api_base: http://vllm-service.default.svc.cluster.local:8000/v1
       api_key: any-string
 ```
+아래와 같이 컨피그맵을 생성한다.
+```
+kubectl create configmap litellm-config --from-file=config.yaml
+```
