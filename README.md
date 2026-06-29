@@ -79,7 +79,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
    - https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-inference-optimization.md
 
 * L13. Observability
-   - [LangFuse 의 이해](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse.md)
+   - [LangFuse 사용하기](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse.md)
 
 * [L14. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/14-post-training.md)
 
