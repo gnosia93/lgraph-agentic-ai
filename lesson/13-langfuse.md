@@ -125,6 +125,7 @@ python step1_trace_bedrock.py
 
 * [멀티스텝 트레이싱](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse-multi.md)
 * [프롬프트 관리](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse-prompt.md)
-
+* [평가(Eval)]()
+  
 ## 레퍼런스 ##
 * https://langfuse.com/docs
