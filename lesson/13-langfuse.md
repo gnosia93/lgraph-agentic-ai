@@ -130,3 +130,5 @@ python step1_trace_bedrock.py
   
 ## 레퍼런스 ##
 * https://langfuse.com/docs
+* https://clickhouse.com/docs/ko/cloud/features/ai-ml/langfuse
+* [LLM 앱 디버깅 툴, Langfuse를 Amazon ECS에 배포하는 방법](https://www.youtube.com/watch?v=rrPQcWq5pe8)
