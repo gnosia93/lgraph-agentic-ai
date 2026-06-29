@@ -95,3 +95,41 @@ model_list:
 ```
 kubectl create configmap litellm-config --from-file=config.yaml
 ```
+
+### 3. 클라이언트 호출 예제 (Python) ###
+이제 클러스터 내부의 백엔드 서비스들은 로컬 LLM을 호출하든, Bedrock을 호출하든 똑같은 OpenAI 형식의 API만 호출하면 됩니다.
+```
+import openai
+
+# EKS 내부 Service 엔드포인트
+client = openai.OpenAI(
+    api_key="sk-my-super-secret-key", # 위에서 설정한 MASTER_KEY
+    base_url="http://litellm-service.default.svc.cluster.local:4000"
+)
+
+# 1. OpenAI 모델 호출
+response1 = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+
+# 2. Bedrock Claude 호출 (코드 수정 불필요!)
+response2 = client.chat.completions.create(
+    model="claude-3-5",
+    messages=[{"role": "user", "content": "How are you?"}]
+)
+
+# 3. Open LLM (vLLM) 호출
+response3 = client.chat.completions.create(
+    model="my-open-llm",
+    messages=[{"role": "user", "content": "Explain EKS cost optimization."}]
+)
+
+print(response1.choices[0].message.content)
+```
+
+
+### 팁 ###
+*	IAM Role for Service Accounts (IRSA): EKS에서 Bedrock을 호출할 때는 파드(Pod)에 AWS IAM Role을 연결해야 합니다. eksctl을 사용하여 서비스 어카운트에 AmazonBedrockFullAccess 권한을 부여하세요.
+*	비용 추적: LiteLLM Gateway에 --telemetry 설정을 추가하면, 어떤 서비스가 어떤 모델에 얼마만큼의 토큰을 썼는지 대시보드(Grafana/Prometheus 연동)로 바로 확인할 수 있습니다.
+*	가용성: EKS 내부에 배치했으므로, 모델 서버가 죽으면 LiteLLM 설정에서 fallbacks를 지정해 바로 다른 모델로 우회하게 만드는 것이 프로덕션 운영의 핵심입니다.
