@@ -69,6 +69,113 @@ with langfuse.start_as_current_generation(  # ② LLM 호출 = Generation
     generation.update(output=..., usage_details=...)  # ③ 출력·토큰 기록 → 비용/지연
 ```
 
+
+```
+"""
+Langfuse 워크샵 — Step 1: 모델 붙이고 호출 1건을 모니터링하기
+=============================================================
+
+목표: Amazon Bedrock 모델을 호출하고, 그 호출 하나가 Langfuse 대시보드에
+      "trace"로 찍히는 것을 직접 확인한다. (입력/출력/지연/토큰·비용)
+
+핵심 개념 3개
+- Trace       : 사용자 요청 한 건의 전체 기록 (여기선 ask() 한 번)
+- Observation : Trace 안의 개별 단계
+- Generation  : LLM 호출을 나타내는 특수 Observation (모델/토큰/비용이 붙음)
+
+준비 (README 참고)
+  pip install langfuse boto3
+  export LANGFUSE_PUBLIC_KEY=pk-lf-...
+  export LANGFUSE_SECRET_KEY=sk-lf-...
+  export LANGFUSE_HOST=https://cloud.langfuse.com   # 셀프호스팅이면 그 주소
+  # AWS 자격증명(aws configure 등)과 Bedrock 모델 액세스 권한 필요
+
+실행
+  python step1_trace_bedrock.py
+  → 끝나면 Langfuse 대시보드의 Traces 탭에서 방금 호출을 확인
+"""
+
+import os
+import boto3
+from langfuse import observe, get_client
+
+# Langfuse 클라이언트: 환경변수(LANGFUSE_*)를 자동으로 읽어 초기화됨
+langfuse = get_client()
+
+# Bedrock 런타임 클라이언트
+REGION = os.environ.get("AWS_REGION", "us-west-2")
+MODEL_ID = os.environ.get(
+    "BEDROCK_MODEL_ID",
+    "us.anthropic.claude-3-5-sonnet-20240620-v1:0",  # 액세스 가능한 모델로 교체
+)
+bedrock = boto3.client("bedrock-runtime", region_name=REGION)
+
+
+@observe()  # 이 데코레이터가 함수 호출 1건을 하나의 Trace로 만든다
+def ask(question: str) -> str:
+    """질문을 Bedrock에 보내고 답을 받는다. 호출 과정이 통째로 트레이싱된다."""
+
+    # LLM 호출을 'generation'으로 기록 시작 (모델/입력을 먼저 남김)
+    with langfuse.start_as_current_generation(
+        name="bedrock-converse",
+        model=MODEL_ID,
+        input=question,
+    ) as generation:
+
+        # 실제 Bedrock 호출
+        response = bedrock.converse(
+            modelId=MODEL_ID,
+            messages=[{"role": "user", "content": [{"text": question}]}],
+            inferenceConfig={"maxTokens": 512, "temperature": 0.7},
+        )
+
+        # 응답 텍스트 추출
+        answer = response["output"]["message"]["content"][0]["text"]
+
+        # 토큰 사용량 추출 (비용 계산의 근거가 됨)
+        usage = response.get("usage", {})
+
+        # generation에 출력/토큰을 채워 넣는다 → 대시보드에서 비용·지연으로 보임
+        generation.update(
+            output=answer,
+            usage_details={
+                "input": usage.get("inputTokens", 0),
+                "output": usage.get("outputTokens", 0),
+                "total": usage.get("totalTokens", 0),
+            },
+        )
+
+    return answer
+
+
+def main():
+    questions = [
+        "한 문장으로: 옵저버빌리티가 왜 중요한가?",
+        "EKS에서 파드 두 개가 통신하는 경로를 한 문장으로 설명해줘.",
+    ]
+
+    for q in questions:
+        print(f"\nQ: {q}")
+        a = ask(q)
+        print(f"A: {a}")
+
+    # 버퍼에 쌓인 트레이스를 서버로 강제 전송 (스크립트 종료 전 필수)
+    langfuse.flush()
+    print("\n완료. Langfuse 대시보드 → Traces 탭에서 방금 2건을 확인하세요.")
+    print("각 trace를 열면 입력/출력/지연(ms)/토큰/예상비용이 보입니다.")
+
+
+if __name__ == "__main__":
+    main()
+
+```
+
+
+
+
+
+
+
 ## 트러블슈팅
 
 - 대시보드에 안 보임 → 스크립트 끝에 `langfuse.flush()` 가 호출됐는지 확인 (전송 버퍼를 비워야 함).
