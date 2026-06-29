@@ -1,5 +1,10 @@
 ## Prefix Aware Routing (KV 캐시 인지 라우팅 / 서빙 최적화) ##
 
+토큰화와 해싱은 완전한 CPU 바운드(Bound) 작업으로, 토큰화는 입력된 텍스트 문장을 미리 정의된 어휘 사전(Vocabulary)에 따라 숫자의 배열(input_ids)로 매핑하는 단순 텍스트 처리 과정이다. 해싱은 변환된 토큰 배열의 앞부분(Prefix)을 받아 SHA-256이나 MurmurHash 같은 알고리즘을 돌려 고유값(ID)을 만드는 순수 논리 연산으로, 두 작업 모두 하드웨어 아키텍처 상 CPU의 연산 속도로도 수 밀리초(ms) 이내에 처리가 끝나는 경량 작업이다.
+
+![](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/images/prefix-aware-routing.png)
+
+
 vLLM 앞단 라우팅 서버는 크게 세 부류예요: ① vLLM 진영 공식, ② Kubernetes 표준(Gateway API), ③ 범용 LLM 게이트웨이.
 
 ### ① vLLM 진영 (가장 직접적) ###
