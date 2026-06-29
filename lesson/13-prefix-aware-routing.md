@@ -1,4 +1,4 @@
-## Prefix Aware Routing ##
+## Prefix Aware Routing (KV 캐시 인지 라우팅 / 서빙 최적화) ##
 
 vLLM 앞단 라우팅 서버는 크게 세 부류예요: ① vLLM 진영 공식, ② Kubernetes 표준(Gateway API), ③ 범용 LLM 게이트웨이.
 
