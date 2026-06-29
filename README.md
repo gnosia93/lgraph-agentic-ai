@@ -78,7 +78,10 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
       - LiteLLM
    - https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-inference-optimization.md
 
-* [L13. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/13-post-training.md)
+* L13. Observability
+   - LangFuse
+
+* [L14. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/14-post-training.md)
 
 
 ### _Appendix_ ###
