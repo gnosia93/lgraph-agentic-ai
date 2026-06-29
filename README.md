@@ -74,6 +74,10 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
      
 * [L12. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/12-post-training.md)
 
+* L13. Request Routing
+   - [Prefix Aware Routing]
+
+
 ### _Appendix_ ###
 
 * [Prometheus / Loki Stack](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/a2-prometheus-loki.md)   
