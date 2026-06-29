@@ -126,7 +126,7 @@ python step1_trace_bedrock.py
 * [멀티스텝 트레이싱](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse-multi.md)
 * [프롬프트 관리](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse-prompt.md)
 * [평가(Eval)](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse-eval.md)
-* [EKS launfuse 배포하기]()
+* [EKS launfuse 배포하기](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse-eks.md)
   
 ## 레퍼런스 ##
 * https://langfuse.com/docs
