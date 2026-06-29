@@ -121,8 +121,10 @@ python step1_trace_bedrock.py
 
 요청에 user_id나 session_id를 부여하면 사용자별 비용 집계나 대화 세션 단위 조회가 가능하다.
 
-### 5. 멀티스텝 트레이싱 ###
+### 5. Advanced 트레이싱 ###
 
+* [멀티스텝 트레이싱](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse-multi.md)
+* [프롬프트 관리]()
 
 ## 레퍼런스 ##
 * https://langfuse.com/docs
