@@ -75,7 +75,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
 * L12. 서빙 최적화
    - [Prefix Aware Routing](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-prefix-aware-routing.md)
    - [Model routing / cascading](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-model-routing.md)
-   - https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-inference-optimization.md
+   - https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-inference-optimization.md
 
 * [L13. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/13-post-training.md)
 
