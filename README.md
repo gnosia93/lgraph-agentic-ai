@@ -74,7 +74,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
    - [Prefix Aware Routing](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-prefix-aware-routing.md)
    - [Model routing / cascading](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-model-routing.md)
       - [bifrost 게이트웨이](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-bifrost-fallback.md)
-      - [LiteLLM]()
+      - [LiteLLM](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-litellm.md)
    - https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-inference-optimization.md
 
 * L13. Observability
