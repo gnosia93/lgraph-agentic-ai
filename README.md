@@ -66,7 +66,6 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
    - [TensorRT-LLM 인퍼런스 (Qwen2.5-72B)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/10-tensorrt-inference.md)
    - [LLM 추론 성능(inference performance) 비교](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/10-llm-benchmark.md)
    - [KEDA 기반 오토 스케일링](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/10-keda-autoscaling.md)
-   - [모델 라우팅 - bifrost 게이트웨어로 Fallback 구성 하기](https://github.com/gnosia93/lg-agentic-ai/blob/main/lesson/10-bifrost-fallback.md)
         
 * L11. 멀티노드 인퍼런스 구성
    - [LeaderWorkerSet](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/11-LeaderWorkerSet.md)
@@ -75,6 +74,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
 * L12. 서빙 최적화
    - [Prefix Aware Routing](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-prefix-aware-routing.md)
    - [Model routing / cascading](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-model-routing.md)
+      - [bifrost 게이트웨이](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-bifrost-fallback.md)
    - https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-inference-optimization.md
 
 * [L13. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/13-post-training.md)
