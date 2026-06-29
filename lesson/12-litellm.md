@@ -12,3 +12,59 @@ OpenAI, Anthropic, Google Gemini, HuggingFace 등 모델마다 각기 다른 API
 *	지능형 모델 스위칭 (Model Switching): "비용이 너무 비싸네? Claude로 바꿔볼까?" 하는 고민이 코드 수정 없이 즉시 실행됩니다. 운영 환경에서 특정 모델 API가 터졌을 때 다른 모델로 자동 전환하는 'Fallbacks' 기능은 덤이죠.
 *	비용과 예산 관리: 에이전트가 내 계좌를 털어먹지 않도록, API 키별로 예산 한도(Budget Manager)를 설정할 수 있습니다. 멍청한 에이전트가 무한 루프를 돌며 발생시키는 비용 사고를 방지하는 최후의 보루인 셈입니다.
 *	통합 모니터링: 각 모델마다 파편화된 로그를 하나로 모아줍니다. 어떤 모델이 가장 삑사리(오류)를 많이 내는지 한눈에 파악할 수 있어, 시스템 개선의 우선순위를 정하기가 훨씬 쉬워집니다.
+
+
+## EKS 배포하기 ##
+
+### 1. EKS에 LiteLLM Gateway 배포 ###
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: litellm
+  template:
+    metadata:
+      labels:
+        app: litellm
+    spec:
+      containers:
+      - name: litellm
+        image: ghcr.io/berriai/litellm:main
+        ports:
+        - containerPort: 4000
+        env:
+        - name: LITELLM_MASTER_KEY
+          value: "sk-my-super-secret-key"
+        # AWS Bedrock 사용을 위한 IAM 설정이 EKS 노드에 필요합니다
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: OPENAI_API_KEY
+          value: "sk-..." 
+        # 설정 파일 마운트 (아래 config.yaml 참고)
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/config.yaml
+          subPath: config.yaml
+      volumes:
+      - name: config-volume
+        configMap:
+          name: litellm-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 4000
+    targetPort: 4000
+  selector:
+    app: litellm
+```
+
