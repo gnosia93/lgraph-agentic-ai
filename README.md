@@ -38,7 +38,6 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
          
 * [L6. LangGraph로 Agentic AI 만들기](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/6-agentic-ai.md)
    - [1. 프로젝트 생성](https://github.com/gnosia93/lg-agentic-ai/blob/main/lesson/langgraph/6-project-init.md)
-   - [2. Observability(랭스미스) 설정](https://github.com/gnosia93/lg-agentic-ai/blob/main/lesson/langgraph/6-project-observe.md)
        
 * [L7. 에이전트 가드레일 및 보안 강화](https://github.com/gnosia93/agentic-ai-eks/blob/main/lesson/7.guard-rail.md)
    - [입력값 필터링(PII 마스킹 & InputSanitizer)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/7-security-input-filter.md)
