@@ -68,3 +68,26 @@ spec:
     app: litellm
 ```
 
+### 2. 모델 설정 (config.yaml - ConfigMap) ###
+여기서 OpenAI, Bedrock, Open LLM(vLLM/Ollama 등)을 한 번에 정의합니다.
+```
+general_settings:
+  master_key: "sk-my-super-secret-key"
+
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: claude-3-5
+    litellm_params:
+      model: bedrock/anthropic.claude-3-5-sonnet-20240620-v1:0
+      # AWS 환경변수 자동 인식
+
+  - model_name: my-open-llm
+    litellm_params:
+      model: openai/meta-llama/llama-3-70b
+      api_base: http://vllm-service.default.svc.cluster.local:8000/v1
+      api_key: any-string
+```
