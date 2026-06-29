@@ -28,7 +28,7 @@ docker compose up
 ```
 기동 후 http://localhost:3000 에 접속해 계정을 만들고 프로젝트와 API 키를 생성한다.
 
-### 2.2 SDK 설치 및 환경 변수 설정 ###
+#### 2.2 SDK 설치 및 환경 변수 설정 ####
 
 이 문서는 Amazon Bedrock을 기준으로 한다. Bedrock 호출에는 boto3를, 트레이싱에는 langfuse를 설치한다.
 
