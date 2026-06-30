@@ -98,14 +98,5 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
 * [Reasoning Model 모델](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/a10-reasoning.md)
 
 
-## 레퍼런스 ##
-
-* [Alternatives to Attention Mechanism](https://www.youtube.com/watch?v=cKSwj_qZ8Jg&list=PLoROMvodv4rPgrvmYbBrxZCK_GwXvDVL3)
-* [System Design Course – APIs, Databases, Caching, CDNs, Load Balancing & Production Infra](https://www.youtube.com/watch?v=C842vFY5kRo)
-* [pytorch tutorials](https://www.youtube.com/playlist?list=PLhhyoLH6IjfxeoooqP9rhU3HJIAVAJ3Vz)
-
-
-## todo ##
-* Open Source LLM 인퍼런스 워크샵 / EKS.
 
 
