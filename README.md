@@ -95,7 +95,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
   - [멀티 에이전트 오케스트레이션](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/6-multi-agent.md)
   - [프로덕션 최적화 및 고려사항](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/6-production-optim.md)
   - 사용자 피드백 루프: 응답에 대한 thumbs up/down 수집하고 개선에 반영하는 구조.
-
+* [Reasoning Model 모델](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/a10-reasoning.md)
 
 
 ## 레퍼런스 ##
