@@ -106,3 +106,95 @@ RAG는 검색(retrieval)과 생성(generation) 두 단계를 나눠서 평가하
 * LLM-as-Judge로 세부 루브릭 채점
 * 애매하거나 중요한 케이스만 사람 평가
 * 모델·프롬프트 변경 시마다 회귀 테스트로 돌리기
+
+## 평가 예시 - RAG 챗봇 평가 ##
+```
+"""
+RAG 챗봇 평가 예시
+- 검색 단계: Context Recall / Precision
+- 생성 단계: Faithfulness (LLM-as-Judge)
+"""
+from dataclasses import dataclass
+
+
+@dataclass
+class RAGSample:
+    question: str
+    retrieved_docs: list[str]   # 시스템이 가져온 문서
+    gold_doc_ids: set[str]      # 정답에 필요한 문서 id
+    retrieved_ids: list[str]    # 가져온 문서 id
+    answer: str                 # 생성된 답변
+
+
+# --- 검색 단계 지표 ---
+def context_recall(sample: RAGSample) -> float:
+    """정답 문서 중 실제로 가져온 비율"""
+    if not sample.gold_doc_ids:
+        return 1.0
+    hit = sample.gold_doc_ids & set(sample.retrieved_ids)
+    return len(hit) / len(sample.gold_doc_ids)
+
+
+def context_precision(sample: RAGSample) -> float:
+    """가져온 문서 중 관련 있는 비율 (노이즈 측정)"""
+    if not sample.retrieved_ids:
+        return 0.0
+    hit = sample.gold_doc_ids & set(sample.retrieved_ids)
+    return len(hit) / len(sample.retrieved_ids)
+
+
+def mrr(sample: RAGSample) -> float:
+    """정답 문서가 상위에 있을수록 높은 점수 (Mean Reciprocal Rank)"""
+    for rank, doc_id in enumerate(sample.retrieved_ids, start=1):
+        if doc_id in sample.gold_doc_ids:
+            return 1.0 / rank
+    return 0.0
+
+
+# --- 생성 단계 지표: Faithfulness (LLM-as-Judge) ---
+FAITHFULNESS_PROMPT = """당신은 엄격한 평가자입니다.
+아래 [답변]의 모든 주장이 [근거 문서]로 뒷받침되는지 판단하세요.
+근거에 없는 내용이 하나라도 있으면 감점하세요.
+
+[근거 문서]
+{context}
+
+[답변]
+{answer}
+
+0.0~1.0 사이 점수와 한 줄 이유를 JSON으로만 출력:
+{{"score": <float>, "reason": "<이유>"}}
+"""
+
+
+def judge_faithfulness(sample: RAGSample, llm_client) -> dict:
+    prompt = FAITHFULNESS_PROMPT.format(
+        context="\n---\n".join(sample.retrieved_docs),
+        answer=sample.answer,
+    )
+    # llm_client는 프롬프트를 받아 문자열(JSON)을 반환한다고 가정
+    import json
+    raw = llm_client(prompt)
+    return json.loads(raw)
+
+
+def evaluate_rag(samples: list[RAGSample], llm_client) -> dict:
+    results = []
+    for s in samples:
+        faith = judge_faithfulness(s, llm_client)
+        results.append({
+            "question": s.question,
+            "recall": context_recall(s),
+            "precision": context_precision(s),
+            "mrr": mrr(s),
+            "faithfulness": faith["score"],
+        })
+    n = len(results)
+    return {
+        "avg_recall": sum(r["recall"] for r in results) / n,
+        "avg_precision": sum(r["precision"] for r in results) / n,
+        "avg_mrr": sum(r["mrr"] for r in results) / n,
+        "avg_faithfulness": sum(r["faithfulness"] for r in results) / n,
+        "details": results,
+    }
+```
