@@ -1,5 +1,6 @@
-비디오와 오디오 데이터는 이미지보다 텐서 크기가 압도적으로 커서 분산 훈련 시 무조건 자원 고갈이 일어납니다. 강사님의 slurm-on-aws나 training-on-eks 클러스터에서 가속기 스왑을 원활하게 굴릴 수 있는 DeepSpeed ZeRO-Stage 3 + 가속기/CPU 메모리 오프로드(Offload) 조합 설정입니다
+## DeepSpeed Stage 3 + Offload 대규모 분산 증류 학습 ##
 
+비디오와 오디오 데이터는 이미지보다 텐서 크기가 압도적으로 커서 분산 훈련 시 무조건 자원 고갈이 일어납니다. 강사님의 slurm-on-aws나 training-on-eks 클러스터에서 가속기 스왑을 원활하게 굴릴 수 있는 DeepSpeed ZeRO-Stage 3 + 가속기/CPU 메모리 오프로드(Offload) 조합 설정입니다
 
 deepspeed_omni_config.json
 ```
