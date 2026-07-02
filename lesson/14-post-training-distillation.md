@@ -53,7 +53,7 @@
 
 ### 구현하기 ###
 
-* 1.	100B 모델에서 데이터를 효율적으로 뽑아낼 데이터 파이프라인 아키텍처(Bedrock or vLLM)
-* 2.	SigLIP과 Qwen/Llama를 엮는 1B 모델 아키텍처 및 커넥터 소스 코드
-* 3.	멀티노드 GPU를 터뜨리지 않고 돌릴 DeepSpeed/FSDP 분산 학습 스크립트
+* [1단계] 100B 모델에서 데이터를 효율적으로 뽑아낼 데이터 파이프라인 아키텍처(Bedrock or vLLM)
+* [2단계]	SigLIP과 Qwen/Llama를 엮는 1B 모델 아키텍처 및 커넥터 소스 코드
+* [3단계]	멀티노드 GPU를 터뜨리지 않고 돌릴 DeepSpeed/FSDP 분산 학습 스크립트
 
