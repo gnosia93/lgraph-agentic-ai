@@ -1,4 +1,4 @@
-## 100B → 1B 멀티모달 지식 증류 프로젝트 가이드 ##
+## 100B → 1B 멀티모달 지식 증류 가이드 ##
 
 100B급 대형 멀티모달 모델(VLM)을 교사(Teacher)로 삼아 1B급 소형 정제 모델(Student)을 만드는
 지식 증류(Knowledge Distillation) + 합성 데이터 생성(Synthetic Data Generation) 파이프라인 가이드입니다.
