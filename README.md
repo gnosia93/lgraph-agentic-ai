@@ -81,7 +81,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
    - [LangFuse 사용하기](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse.md)
 
 * [L14. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/14-post-training.md)
-   - [100B to 1B Distillation]
+   - [100B to 1B Distillation](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation.md)
 
 ### _Appendix_ ###
 
