@@ -1,84 +1,55 @@
-구조 설계의 핵심은 **"어떻게 영리하게 다른 차원의 가속기 텐서들을 연결할 것인가"**입니다.
-구글의 최신 비전 인코더인 SigLIP(추출 벡터 차원: 1152)의 시각 특징을 경량 백본인 Qwen2.5-1.5B-Instruct(숨겨진 차원: 1536) 내부에 매핑하는 LLaVA 스타일의 MLP 커넥터(프로젝션 레이어) 구현 소스 코드입니다.
+학생 모델(1B) 역시 단순히 이미지뿐만 아니라 비디오(시간축), 보이스(주파수축)를 모두 받아먹을 수 있도록 커넥터를 다각화해야 합니다. 각각의 전용 인코더를 1B 언어 모델 백본에 정렬시키는 확장 아키텍처 구조입니다.
+
+```
+[Vision Encoder (SigLIP)] ➡️ [MLP Projector 1] ──┐
+[Audio Encoder (Whisper)]  ➡️ [MLP Projector 2] ──┼─➡️ [Qwen/Llama 1B Backbone]
+[Video Encoder (ViViT)]    ➡️ [MLP Projector 3] 
+```
 
 ```
 import torch
 import torch.nn as nn
-from transformers import AutoModel, AutoConfig, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM
 
-class VLM1BConnector(nn.Module):
-    """
-    SigLIP (Vision Encoder)와 Qwen/Llama (LLM BackBone)의 차원을 매핑해주는 
-    LLaVA 스타일의 고성능 MLP 프로젝션 커넥터 레이어
-    """
-    def __init__(self, vision_dim: int = 1152, llm_dim: int = 1536):
+class OmniProjector(nn.Module):
+    """모달리티별 고유 차원을 LLM 공간(1536)으로 튜닝하는 공용 커넥터"""
+    def __init__(self, input_dim, llm_dim=1536):
         super().__init__()
-        # 단순 Linear 레이어보다 멀티모달 정렬 레이어에는 중간에 겔루(GELU)가 들어간 
-        # 2층 구조의 MLP가 벤치마크 점수를 훨씬 잘 뽑아냅니다.
-        self.mlp = nn.Sequential(
-            nn.Linear(vision_dim, llm_dim),
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, llm_dim),
             nn.GELU(),
             nn.Linear(llm_dim, llm_dim)
         )
+    def forward(self, x): return self.net(x)
 
-    def forward(self, x):
-        return self.mlp(x)
-
-
-class CustomVLM1BModel(nn.Module):
-    def __init__(self, vision_model_id="google/siglip-so400m-patch14-384", llm_model_id="Qwen/Qwen2.5-1.5B-Instruct"):
+class StudentOmniVLM1B(nn.Module):
+    def __init__(self, llm_id="Qwen/Qwen2.5-1.5B-Instruct"):
         super().__init__()
-        print(f"👁️ 비전 인코더 로딩 중: {vision_model_id}")
-        self.vision_encoder = AutoModel.from_pretrained(vision_model_id).vision_model
+        # 1B 경량 백본 언어 모델
+        self.llm = AutoModelForCausalLM.from_pretrained(llm_id)
+        llm_dim = self.llm.config.hidden_size # 1536
         
-        print(f"✍️ 경량 언어 모델 백본 로딩 중: {llm_model_id}")
-        self.llm = AutoModelForCausalLM.from_pretrained(llm_model_id)
-        
-        # 임베딩 차원 추출 및 커넥터 연결
-        vision_dim = self.vision_encoder.config.hidden_size      # 1152
-        llm_dim = self.llm.config.hidden_size                  # 1536
-        self.connector = VLM1BConnector(vision_dim=vision_dim, llm_dim=llm_dim)
-        
-        # [중요 - 페이즈 1 정렬 전략]
-        # 비전 인코더와 대형 LLM 가중치는 잠그고(Freeze), 커넥터 레이어만 훈련 모드로 개방
-        for param in self.vision_encoder.parameters():
-            param.requires_grad = False
-        for param in self.llm.parameters():
-            param.requires_grad = False
-        for param in self.connector.parameters():
-            param.requires_grad = True
+        # 각 모달리티별 커넥터 배치
+        self.image_projector = OmniProjector(input_dim=1152, llm_dim=llm_dim) # SigLIP 차원 대응
+        self.audio_projector = OmniProjector(input_dim=1280, llm_dim=llm_dim) # Whisper-large 차원 대응
+        self.video_projector = OmniProjector(input_dim=768, llm_dim=llm_dim)  # 비디오 인코더 차원 대응
 
-    def forward(self, pixel_values, input_ids, attention_mask, labels=None):
-        # 1. 시각 특징 추출 (Batch, Sequence_Length, Vision_Dim)
-        # SigLIP의 패치 토큰 아웃풋 획득
-        vision_outputs = self.vision_encoder(pixel_values).last_hidden_state
-        
-        # 2. 커넥터를 통해 LLM의 가중치 임베딩 공간 차원으로 매핑 (1152 -> 1536)
-        image_features = self.connector(vision_outputs)
-        
-        # 3. 텍스트를 고유 임베딩 벡터로 변환
-        text_embeddings = self.llm.get_input_embeddings()(input_ids)
-        
-        # 4. 멀티모달 입력 병합: 이미지 토큰 임베딩 레이어 뒤에 텍스트 임베딩 컨캣(Concat)
-        # 실제 구현에서는 <image> 토큰이 위치한 인덱스에 정밀하게 삽입해야 하나, 
-        # 프리펜드(Prepend) 방식의 단순화 구조로 예시 구현
-        inputs_embeds = torch.cat([image_features, text_embeddings], dim=1)
-        
-        # attention_mask도 이미지 토큰 길이만큼 확장 필요
-        batch_size, img_seq_len, _ = image_features.shape
-        img_attn_mask = torch.ones((batch_size, img_seq_len), device=input_ids.device)
-        full_attention_mask = torch.cat([img_attn_mask, attention_mask], dim=1)
+        # 인코더들은 가중치를 Freeze하고 프로젝트 레이어만 학습 가능하게 세팅
+        # (실제 가동 시 외부 인코더 인스턴스를 서브 모듈로 포용합니다.)
 
-        # 5. LLM 디코더 가동
-        outputs = self.llm(
-            inputs_embeds=inputs_embeds,
-            attention_mask=full_attention_mask,
-            labels=labels
-        )
-        return outputs
-
-# 모델 초기화 테스트
-if __name__ == "__main__":
-    model = CustomVLM1BModel()
-    print("✅ SigLIP + Qwen 1B 경량 멀티모달 가속 아키텍처 조립 완료.")
+    def forward(self, image_embeds, audio_embeds, video_embeds, input_ids, labels=None):
+        # 각각의 커넥터를 통과시켜 LLM 공간으로 통일
+        img_tokens = self.image_projector(image_embeds) if image_embeds is not None else None
+        aud_tokens = self.audio_projector(audio_embeds) if audio_embeds is not None else None
+        vid_tokens = self.video_projector(video_embeds) if video_embeds is not None else None
+        
+        # 텍스트 토큰 임베딩 변환
+        text_tokens = self.llm.get_input_embeddings()(input_ids)
+        
+        # 모든 모달리티 토큰 텐서를 시퀀스 차원(dim=1)으로 결합(Concat)
+        token_list = [t for t in [img_tokens, aud_tokens, vid_tokens, text_tokens] if t is not None]
+        fused_embeddings = torch.cat(token_list, dim=1)
+        
+        # LLM 포워드 가동
+        return self.llm(inputs_embeds=fused_embeddings, labels=labels)
 ```
