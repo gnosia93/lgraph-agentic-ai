@@ -5,7 +5,7 @@
 멀티모달은 텍스트보다 정렬(Alignment)이 까다로워 전략적 접근이 필요합니다.
 
 관련 구현 문서:
-- [1단계 - 100B Omni-VLM 추론 파이프라인](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s1.md)
+- [1단계 - 오픈소스 100B Omni-VLM 추론 - 지식 증류 데이터 생성](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s1.md)
 - [2단계 - 1B 정제 모델 멀티헤드(Multi-head) 오케스트레이션](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s2.md)
 - [3단계 - DeepSpeed ZeRO-3 1B Omni-VLM 분산 증류 학습](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s3.md)
 
