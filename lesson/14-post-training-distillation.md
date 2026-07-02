@@ -4,10 +4,10 @@
 지식 증류(Knowledge Distillation) + 합성 데이터 생성(Synthetic Data Generation) 파이프라인 가이드입니다.
 멀티모달은 텍스트보다 정렬(Alignment)이 까다로워 전략적 접근이 필요합니다.
 
-관련 구현 문서(이 저장소):
-- 1단계 — 100B Omni-VLM 추론 파이프라인 (`omni_vlm_distillation_pipeline_review.md`)
-- 2단계 — 1B 멀티헤드 오케스트레이션 (`multihead_omni_vlm_review.md`)
-- 3단계 — DeepSpeed ZeRO-3 학습 (`omni_vlm_deepspeed_training_review.md`)
+관련 구현 문서:
+- [1단계 - 100B Omni-VLM 추론 파이프라인](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s1.md)
+- [2단계 - 1B 멀티헤드 오케스트레이션](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s2.md)
+- [3단계 - DeepSpeed ZeRO-3 학습](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s3.md)
 
 
 ### 1단계: 교사 모델(100B VLM)을 통한 데이터 정제 및 합성 ###
