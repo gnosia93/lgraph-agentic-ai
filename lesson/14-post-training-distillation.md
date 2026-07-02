@@ -54,6 +54,6 @@
 ### 구현하기 ###
 
 * [1단계 - 오픈소스 100B Omni-VLM 고성능 추론 파이프라인 아키텍처](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s1.md)
-* [[2단계]	SigLIP과 Qwen/Llama를 엮는 1B 모델 아키텍처 및 커넥터 소스 코드](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s2.md)
+* [2단계 - 1B 소형 정제 모델을 위한 멀티헤드(Multi-head) 오케스트레이션](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s2.md)
 * [[3단계]	멀티노드 GPU를 터뜨리지 않고 돌릴 DeepSpeed/FSDP 분산 학습 스크립트](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation-s3.md)
 
