@@ -1,163 +1,248 @@
-## 1B 소형 정제 모델을 위한 멀티헤드(Multi-head) 오케스트레이션 ##
+# 1B 소형 정제 모델을 위한 멀티헤드(Multi-head) 오케스트레이션
 
-학생 모델(1B) 역시 단순히 이미지뿐만 아니라 비디오(시간축), 보이스(주파수축)를 모두 받아먹을 수 있도록 커넥터를 다각화해야 합니다. 각각의 전용 인코더를 1B 언어 모델 백본에 정렬시키는 확장 아키텍처 구조입니다.
+전용 인코더(Vision/Audio/Video) → 모달리티별 프로젝터 → 특수토큰 치환 → 1B급 LLM 백본으로
+정렬시키는 확장 아키텍처 정리입니다.
 
 ```
-[Vision Encoder (SigLIP)] ➡️ [MLP Projector 1] ──┐
-[Audio Encoder (Whisper)]  ➡️ [MLP Projector 2] ──┼─➡️ [Qwen/Llama 1B Backbone]
-[Video Encoder (ViViT)]    ➡️ [MLP Projector 3] 
+[Vision Encoder (SigLIP)] ─▶ [MLP Projector 1] ──┐
+[Audio Encoder (Whisper)] ─▶ [MLP Projector 2] ──┼─▶ [Qwen/Llama 1B Backbone]
+[Video Encoder (ViViT)]   ─▶ [MLP Projector 3] ──┘
 ```
 
-### 멀티헤드 오케스트레이션의 핵심 메커니즘 ###
-우리가 텍스트 입력으로 "<image><audio>이 파일들을 분석해라."라고 주면, 텍스트 토크나이저는 <image>와 <audio>라는 특수 토큰을 단 1개의 정수 ID로 인코딩합니다.
-우리가 해야 할 일은 LLM 디코더로 들어가기 전에, 그 1글자짜리 텍스트 임베딩 자리를 찾아내서 비전 인코더가 뽑아낸 수백 개의 시각 패치 텐서 덩어리로 통째로 '치환(Replace)' 및 '슬라이싱(Slicing)' 가공을 해주어야 합니다.
+---
 
-실제 오픈소스 진영(LLaVA, Qwen2-Audio 등)에서 다중 모달리티를 인젝션할 때 가장 골치 아픈 점은 **“어느 자리에 이미지 토큰을 넣고, 어느 자리에 텍스트와 오디오 토큰을 치환해 넣을 것인가? 이다.
+## 1. 이론적 배경 (왜 이렇게 동작하는가)
 
-### 💻 1B 소형 정제 모델을 위한 완전판 오케스트레이션 코드 ###
+### 1.1 모달리티 갭(Modality Gap)과 프로젝터의 역할
+SigLIP(1152차원), Whisper(1280차원), ViViT는 각자 **다른 벡터 공간**에서 학습된 임베딩을 뱉습니다.
+LLM 백본은 자기 텍스트 임베딩 공간(1536차원)만 이해하죠. 프로젝터는 단순 차원 맞춤(reshape)이 아니라,
+**이질적인 표현 공간을 언어 모델이 "가짜 토큰(soft prompt)"으로 받아들일 수 있는 공간으로 사상(mapping)**
+하는 학습 가능한 변환입니다. LLaVA-1.5가 단층 Linear에서 2-layer MLP + GELU로 바꾼 뒤 성능이 크게
+오른 이유가 이 비선형 정렬 능력 때문입니다.
+
+### 1.2 "치환"의 본질: 시퀀스 길이가 변한다
+`<image>`는 토크나이저에서 정수 ID 1개입니다. 하지만 실제로 LLM에 들어가는 건 이 자리에
+**64개(패치) 임베딩 행**이 끼워지는 것. 즉 시퀀스 길이가
+
 ```
+L_new = L_text - (특수토큰 개수) + Σ(각 모달리티 임베딩 길이)
+```
+
+로 **늘어납니다.** 이게 배칭의 핵심 난점입니다. 문장마다 이미지/오디오 유무·길이가 달라
+최종 길이가 제각각이 되므로, 단순 `stack`이 아니라 **패딩 기반 배칭**이 필요합니다.
+
+### 1.3 왜 라벨을 -100으로 채우는가
+PyTorch `CrossEntropyLoss`의 `ignore_index=-100`입니다. 주입된 이미지/오디오 임베딩 위치에는
+"정답 다음 토큰"이 존재하지 않으므로, 그 자리를 손실 계산에서 제외해야 합니다. 안 그러면 모델이
+시각 패치 자리에서 엉뚱한 텍스트 토큰을 예측하도록 학습돼 붕괴합니다.
+
+### 1.4 인터리빙(Interleaving)의 핵심 = 순서 보존
+`<audio><image>텍스트`처럼 오디오가 먼저 올 수도 있습니다. **텍스트에 등장한 순서 그대로**
+임베딩을 배치해야 합니다. "무조건 이미지 먼저"로 하드코딩하면 순서가 뒤바뀔 때 의미가 깨지므로,
+발생 위치를 정렬해 순서를 보존하는 방식이 안전합니다.
+
+---
+
+## 2. 구현 코드 (완전판)
+
+핵심 설계: **이벤트 리스트를 위치순으로 정렬**해서 임의 순서·임의 개수의 모달리티를 인터리빙하고,
+**stack 대신 명시적 패딩**으로 배칭하며, **마스크/라벨/dtype**을 일관되게 처리합니다.
+
+```python
 import torch
 import torch.nn as nn
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
 
 class OmniProjector(nn.Module):
-    """모달리티별 텐서 차원을 LLM 숨겨진 차원(1536)으로 프로젝션"""
-    def __init__(self, input_dim, llm_dim=1536):
+    """모달리티별 인코더 출력을 LLM hidden_dim으로 사상하는 학습형 프로젝터.
+    단순 차원 맞춤이 아니라 표현 공간 정렬(alignment)을 담당한다 (LLaVA-1.5 스타일)."""
+
+    def __init__(self, input_dim: int, llm_dim: int = 1536):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(input_dim, llm_dim),
             nn.GELU(),
-            nn.Linear(llm_dim, llm_dim)
+            nn.Linear(llm_dim, llm_dim),
         )
-    def forward(self, x): 
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.net(x)
 
-class StudentOmniVLM1B(nn.Module):
-    def __init__(self, llm_id="Qwen/Qwen2.5-1.5B-Instruct", image_token_id=151646, audio_token_id=151647):
+
+class StudentOmniVLM(nn.Module):
+    def __init__(
+        self,
+        llm_id: str = "Qwen/Qwen2.5-1.5B-Instruct",
+        image_token: str = "<|image_pad|>",
+        audio_token: str = "<|audio_pad|>",
+    ):
         super().__init__()
-        # 1. 1B 경량 백본 언어 모델 로드
+
+        # 1) 백본 + 토크나이저 로드
+        self.tokenizer = AutoTokenizer.from_pretrained(llm_id)
         self.llm = AutoModelForCausalLM.from_pretrained(llm_id)
-        llm_dim = self.llm.config.hidden_size # 1536
-        
-        # 2. 토크나이저 내의 특수 토큰 ID 매핑 점검 (치환 포인트 포착용)
-        self.image_token_id = image_token_id
-        self.audio_token_id = audio_token_id
-        
-        # 3. 모달리티별 멀티헤드 전용 프로젝트 레이어
-        self.image_projector = OmniProjector(input_dim=1152, llm_dim=llm_dim) # SigLIP 대응
-        self.audio_projector = OmniProjector(input_dim=1280, llm_dim=llm_dim) # Whisper 대응
+        llm_dim = self.llm.config.hidden_size  # 1.5B -> 1536
 
-    def forward(self, image_embeds, audio_embeds, input_ids, attention_mask, labels=None):
-        """
-        [Shape 정렬 목표]
-        - input_ids: [Batch, Text_Seq_Len]
-        - image_embeds: [Batch, Image_Patch_Len(예: 64), 1152]
-        - audio_embeds: [Batch, Audio_Frame_Len(예: 300), 1280]
-        """
-        batch_size, text_seq_len = input_ids.shape
-        device = input_ids.device
-        
-        # A. 원본 텍스트 임베딩 추출 -> [Batch, Text_Seq_Len, 1536]
-        text_embeddings = self.llm.get_input_embeddings()(input_ids)
-        
-        # B. 외부 가속기 토큰들을 LLM 차원으로 미세 조율
-        # [Batch, 64, 1536]
-        projected_image = self.image_projector(image_embeds) if image_embeds is not None else None
-        # [Batch, 300, 1536]
-        projected_audio = self.audio_projector(audio_embeds) if audio_embeds is not None else None
-
-        # C. [핵심 패치] 배치의 각 문장별로 순회하며 특수 토큰 자리에 멀티모달 텐서 융합 인터리빙(Interleaving)
-        final_embeddings = []
-        final_labels = [] if labels is not None else None
-        
-        for i in range(batch_size):
-            cur_input_ids = input_ids[i]
-            cur_text_embeds = text_embeddings[i]
-            
-            # 1단계: 문장 내에서 이미지 특수 토큰과 오디오 특수 토큰 위치(인덱스) 스캔
-            img_loc = (cur_input_ids == self.image_token_id).nonzero(as_tuple=True)[0]
-            aud_loc = (cur_input_ids == self.audio_token_id).nonzero(as_tuple=True)[0]
-            
-            # 실전 인프라 예외처리: 특수 토큰이 없는 일반 텍스트 입력 문장일 경우
-            if len(img_loc) == 0 and len(aud_loc) == 0:
-                final_embeddings.append(cur_text_embeds)
-                if labels is not None:
-                    final_labels.append(labels[i])
-                continue
-                
-            # 2단계: 조각난 텍스트와 가속기 멀티헤드 텐서들을 순서대로 조립
-            # 시퀀스를 분할 조립하기 위한 세그먼트 빌더 구현
-            segments = []
-            cur_idx = 0
-            
-            # 본 코드에서는 단순화를 위해 하나의 문장에 이미지 1개, 오디오 1개가 맨 앞에 순서대로 온다고 가정한 슬라이싱 로직 매핑
-            # <image> 토큰 이전 텍스트 분할 추출 (보통 0번째 위치에 특수 토큰이 위치함)
-            if projected_image is not None and len(img_loc) > 0:
-                idx = img_loc[0].item()
-                if idx > cur_idx: segments.append(cur_text_embeds[cur_idx:idx])
-                segments.append(projected_image[i]) # 치환: 1글자 텍스트 임베딩 대신 64줄의 이미지 텐서 주입
-                cur_idx = idx + 1
-                
-            if projected_audio is not None and len(aud_loc) > 0:
-                idx = aud_loc[0].item()
-                if idx > cur_idx: segments.append(cur_text_embeds[cur_idx:idx])
-                segments.append(projected_audio[i]) # 치환: 1글자 텍스트 임베딩 대신 300줄의 오디오 텐서 주입
-                cur_idx = idx + 1
-                
-            # 남은 후속 텍스트 전부 결합
-            if cur_idx < text_seq_len:
-                segments.append(cur_text_embeds[cur_idx:])
-                
-            # 문장별 조립 완료 -> [New_Fused_Seq_Len, 1536]
-            fused_sentence_embed = torch.cat(segments, dim=0)
-            final_embeddings.append(fused_sentence_embed)
-            
-            # 3단계: Label(정답) 생성 시에도 가속기 임베딩이 침범한 만큼 패딩값(-100)으로 축 확장
-            if labels is not None:
-                cur_labels = labels[i]
-                label_segments = []
-                cur_lbl_idx = 0
-                
-                if len(img_loc) > 0:
-                    idx = img_loc[0].item()
-                    if idx > cur_lbl_idx: label_segments.append(cur_labels[cur_lbl_idx:idx])
-                    # 이미지 토큰 영역은 손실(Loss) 계산에서 제외하도록 익스클루전 마스크(-100) 채우기
-                    label_segments.append(torch.full((projected_image.shape[1],), -100, dtype=cur_labels.dtype, device=device))
-                    cur_lbl_idx = idx + 1
-                    
-                if len(aud_loc) > 0:
-                    idx = aud_loc[0].item()
-                    if idx > cur_lbl_idx: label_segments.append(cur_labels[cur_lbl_idx:idx])
-                    # 오디오 영역 제외 마스크 채우기
-                    label_segments.append(torch.full((projected_audio.shape[1],), -100, dtype=cur_labels.dtype, device=device))
-                    cur_lbl_idx = idx + 1
-                    
-                if cur_lbl_idx < text_seq_len:
-                    label_segments.append(cur_labels[cur_lbl_idx:])
-                    
-                final_labels.append(torch.cat(label_segments, dim=0))
-
-        # D. 가변 길이 문장들의 최종 배칭 처리를 위한 스택(Stack) 파이프라이닝
-        # (실제 대량 분산 배치 전파 시에는 크기를 통일하는 패딩 작업이 수행되어야 합니다.)
-        inputs_embeds = torch.stack(final_embeddings, dim=0)
-        
-        final_attention_mask = torch.ones(inputs_embeds.shape[:2], dtype=attention_mask.dtype, device=device)
-        
-        train_labels = None
-        if labels is not None:
-            train_labels = torch.stack(final_labels, dim=0)
-
-        # E. 드디어 완벽한 행렬 형태로 정렬된 텐서들을 Qwen/Llama 백본에 바인딩
-        outputs = self.llm(
-            inputs_embeds=inputs_embeds,
-            attention_mask=final_attention_mask,
-            labels=train_labels,
-            return_dict=True
+        # 2) 특수 토큰을 "안전하게" 등록 (하드코딩 금지)
+        #    이미 존재하지 않는 새 토큰만 추가되고, ID는 tokenizer가 부여한다.
+        added = self.tokenizer.add_special_tokens(
+            {"additional_special_tokens": [image_token, audio_token]}
         )
-        return outputs
+        if added > 0:
+            # 새 토큰 행을 임베딩 행렬에 추가
+            self.llm.resize_token_embeddings(len(self.tokenizer))
+        self.image_token_id = self.tokenizer.convert_tokens_to_ids(image_token)
+        self.audio_token_id = self.tokenizer.convert_tokens_to_ids(audio_token)
+
+        # 3) 모달리티별 전용 프로젝터
+        self.image_projector = OmniProjector(input_dim=1152, llm_dim=llm_dim)  # SigLIP
+        self.audio_projector = OmniProjector(input_dim=1280, llm_dim=llm_dim)  # Whisper
+        # (Video/ViViT용 self.video_projector 도 동일 패턴으로 추가 가능)
+
+    @property
+    def _dtype(self):
+        return self.llm.get_input_embeddings().weight.dtype
+
+    def forward(
+        self,
+        input_ids: torch.Tensor,        # [B, T]
+        attention_mask: torch.Tensor,   # [B, T]
+        image_embeds: torch.Tensor = None,  # [B, N_img, 1152]
+        audio_embeds: torch.Tensor = None,  # [B, N_aud, 1280]
+        labels: torch.Tensor = None,    # [B, T]
+    ):
+        device = input_ids.device
+        dtype = self._dtype
+        batch_size = input_ids.shape[0]
+
+        # A. 텍스트 임베딩 추출
+        text_embeddings = self.llm.get_input_embeddings()(input_ids)  # [B, T, D]
+
+        # B. 프로젝션 (dtype 정렬 필수)
+        projected_image = (
+            self.image_projector(image_embeds.to(dtype)) if image_embeds is not None else None
+        )
+        projected_audio = (
+            self.audio_projector(audio_embeds.to(dtype)) if audio_embeds is not None else None
+        )
+
+        fused_embeds, fused_masks, fused_labels = [], [], []
+
+        # C. 문장별 인터리빙 (위치순 정렬로 순서/개수 무관하게 처리)
+        for i in range(batch_size):
+            cur_ids = input_ids[i]
+            cur_txt = text_embeddings[i]
+            cur_msk = attention_mask[i]
+            cur_lbl = labels[i] if labels is not None else None
+
+            # 특수토큰 발생 지점을 (위치, 주입텐서) 이벤트로 수집
+            events = []
+            if projected_image is not None:
+                for p in (cur_ids == self.image_token_id).nonzero(as_tuple=True)[0].tolist():
+                    events.append((p, projected_image[i]))
+            if projected_audio is not None:
+                for p in (cur_ids == self.audio_token_id).nonzero(as_tuple=True)[0].tolist():
+                    events.append((p, projected_audio[i]))
+            events.sort(key=lambda e: e[0])  # ★ 텍스트 등장 순서 보존
+
+            if not events:  # 순수 텍스트 문장
+                fused_embeds.append(cur_txt)
+                fused_masks.append(cur_msk)
+                if cur_lbl is not None:
+                    fused_labels.append(cur_lbl)
+                continue
+
+            emb_seg, msk_seg, lbl_seg = [], [], []
+            cursor = 0
+            for pos, mm in events:
+                # 특수토큰 앞쪽 텍스트 조각
+                if pos > cursor:
+                    emb_seg.append(cur_txt[cursor:pos])
+                    msk_seg.append(cur_msk[cursor:pos])
+                    if cur_lbl is not None:
+                        lbl_seg.append(cur_lbl[cursor:pos])
+                # 모달리티 텐서 주입
+                n = mm.shape[0]
+                emb_seg.append(mm)
+                msk_seg.append(torch.ones(n, dtype=cur_msk.dtype, device=device))
+                if cur_lbl is not None:
+                    lbl_seg.append(torch.full((n,), -100, dtype=cur_lbl.dtype, device=device))
+                cursor = pos + 1  # 특수토큰 1개 소비
+
+            # 남은 후속 텍스트
+            if cursor < cur_ids.shape[0]:
+                emb_seg.append(cur_txt[cursor:])
+                msk_seg.append(cur_msk[cursor:])
+                if cur_lbl is not None:
+                    lbl_seg.append(cur_lbl[cursor:])
+
+            fused_embeds.append(torch.cat(emb_seg, dim=0))
+            fused_masks.append(torch.cat(msk_seg, dim=0))
+            if cur_lbl is not None:
+                fused_labels.append(torch.cat(lbl_seg, dim=0))
+
+        # D. 가변 길이 → 오른쪽 패딩으로 배칭 (stack 금지!)
+        max_len = max(e.shape[0] for e in fused_embeds)
+        D = text_embeddings.shape[-1]
+
+        inputs_embeds = torch.zeros(batch_size, max_len, D, dtype=dtype, device=device)
+        out_mask = torch.zeros(batch_size, max_len, dtype=attention_mask.dtype, device=device)
+        out_labels = (
+            torch.full((batch_size, max_len), -100, dtype=input_ids.dtype, device=device)
+            if labels is not None else None
+        )
+
+        for i in range(batch_size):
+            L = fused_embeds[i].shape[0]
+            inputs_embeds[i, :L] = fused_embeds[i]
+            out_mask[i, :L] = fused_masks[i]
+            if out_labels is not None:
+                out_labels[i, :L] = fused_labels[i]
+
+        # E. 백본 forward
+        return self.llm(
+            inputs_embeds=inputs_embeds,
+            attention_mask=out_mask,
+            labels=out_labels,
+            return_dict=True,
+        )
+
 
 if __name__ == "__main__":
-    # 아키텍처 단위 검증용 더미 가동 코드
-    model = StudentOmniVLM1B()
-    print("✅ 특수 토큰 동적 치환 엔진(Interleaving)을 포함한 완전판 멀티헤드 VLM 조립 완료.")
+    model = StudentOmniVLM()
+    B, T, D = 2, 10, model.llm.config.hidden_size
+
+    input_ids = torch.randint(0, 1000, (B, T))
+    # 0번 문장: 위치1에 이미지, 위치2에 오디오 심기
+    input_ids[0, 1] = model.image_token_id
+    input_ids[0, 2] = model.audio_token_id
+    attention_mask = torch.ones(B, T, dtype=torch.long)
+    labels = input_ids.clone()
+
+    image_embeds = torch.randn(B, 64, 1152)   # SigLIP: 64 patches
+    audio_embeds = torch.randn(B, 300, 1280)  # Whisper: 300 frames
+
+    out = model(input_ids, attention_mask, image_embeds, audio_embeds, labels)
+    print("loss:", out.loss.item())
+    print("logits:", out.logits.shape)  # [B, max_fused_len, vocab]
+    print("✅ 순서·개수 무관 인터리빙 + 패딩 배칭 검증 완료")
 ```
+
+---
+
+## 3. 실전 투입 전 체크리스트 (이론+실무)
+
+1. **토큰 개수 = 패치 개수 규약 (권장 대안)**: 위 코드는 "특수토큰 1개 → 64행 치환" 방식입니다.
+   Qwen2-VL/최신 LLaVA는 반대로 **전처리 단계에서 `<image>`를 패치 수만큼 반복 삽입**한 뒤 1:1로
+   갈아끼웁니다. 시퀀스 길이가 전처리 때 확정돼 배칭이 단순하고 정합성 검증이 쉬워집니다.
+2. **정합성 검증**: `주입 임베딩 총 행수 == 특수토큰 총 개수 × 패치수`를 assert로 걸어 파이프라인 버그 조기 발견.
+3. **2단계 학습 전략**: 정렬 초기엔 **백본 freeze + 프로젝터만 학습**(alignment pretraining),
+   이후 **프로젝터 + LoRA 미세조정**(instruction tuning)하는 LLaVA식 2-stage가 소형 모델에서 안정적.
+4. **생성(inference) 경로**: 학습용 `forward`만 있고 `generate`가 없습니다. 추론 시 융합된 `inputs_embeds`를
+   만들어 `self.llm.generate(inputs_embeds=..., attention_mask=...)`로 넣고, 첫 스텝에만 멀티모달 임베딩이
+   들어가도록 KV 캐시 설계 필요.
+5. **좌측 패딩 고려**: 디코더 생성에서는 보통 left-padding이 유리. 학습(right-pad)/추론(left-pad) 규약 분리.
+6. **dtype/디바이스 정렬**: fp16/bf16 학습 시 프로젝터 출력과 텍스트 임베딩 dtype을 맞춰야 `cat`에서 안 터짐.
+7. **비디오(ViViT) 확장**: 시간축 토큰은 프레임 수 × 프레임당 패치라 시퀀스 폭증.
+   temporal pooling이나 Q-Former류 토큰 압축을 프로젝터 앞단에 두는 걸 고려.
