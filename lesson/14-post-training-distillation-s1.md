@@ -1,86 +1,69 @@
+100B 모델은 가중치 용량만 FP16 기준 약 200GB에 달하며, 이미지/비디오/음성 텐서가 들어가면 컨텍스트 윈도우가 폭발합니다. 따라서 싱글 노드(A100/H100 8장) 환경에서 **vLLM의 텐서 병렬화(TP=8)**를 활용해 분산 추론 엔진을 띄우고, 파이썬 멀티프로세싱으로 데이터를 밀어 넣는 구조가 가장 효율적입니다.
 
-100B급 대형 모델(교사)로부터 수십만 장의 이미지에 대한 캡션 및 VQA(질의응답) 데이터를 추출할 때의 병목은 **'네트워크 I/O'**와 **'LLM 스루풋(Throughput)'**입니다.
-여기서는 **AWS Bedrock의 비동기 일괄 처리(Batch Inference)**를 활용한 파이프라인 아키텍처를 구현합니다. 실시간 API 대비 비용이 50% 저렴하며, API Rate Limit(호출 제한) 스트레스 없이 S3 버킷을 통해 대량의 데이터를 가장 안전하게 밀어 넣을 수 있는 엔터프라이즈 표준 방식입니다.
-
-
-### 1) 데이터 파이프라인 아키텍처 흐름 ###
-
-[Raw Images 인덱싱] ➡️ [S3 Manifest JSONL 생성] ➡️ [Bedrock Batch Job 생성] ➡️ [비동기 100B 추론] ➡️ [S3 결과 적재] ➡️ [1B 학습용 전처리]
-
-### 2) Bedrock Batch Inference 입력용 Manifest 생성 및 Job 요청 스크립트 ###
+### 1) 인프라 토폴로지 및 데이터 흐름 ###
+* S3/Lustre 스토리지: 이미지, 비디오(.mp4), 음성(.wav) 원천 데이터 저장
+* Ray Data / Multiprocessing 워커: 멀티미디어 데이터를 텐서로 디코딩 (CPU 병목 방지)
+* vLLM 대형 추론 엔진: TP=8로 100B 모델을 GPU 8장에 쪼개 올려 실시간/배치 분산 추론 가동
+  
+### 2) 100B Omni-VLM 분산 배치 추론 스크립트 (extract_omni_data.py) ###
 ```
-import json
-import boto3
-import time
+import os
+from vllm import LLM, SamplingParams
 
-# 1. AWS Bedrock 초기화
-bedrock_client = boto3.client(service_name="bedrock", region_name="us-east-1")
-s3_client = boto3.client(service_name="s3", region_name="us-east-1")
+# 1. 분산 환경 변수 및 vLLM 최적화 설정
+# 100B 모델을 GPU 8장에 분산하여 로딩 (Tensor Parallelism = 8)
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-BUCKET_NAME = "your-ai-distillation-data-bucket"
-MANIFEST_KEY = "inputs/bedrock_batch_input.jsonl"
+print("🚀 오픈소스 100B Omni-VLM 분산 추론 엔진 로딩 시작 (TP=8)...")
+llm = LLM(
+    model="meta-llama/Llama-3.2-90B-Vision-Instruct", # 또는 최신 100B급 오픈소스 Omni 모델
+    tensor_parallel_size=8,                            # HGX A100/H100 8장 전용 세팅
+    max_model_len=8192,                                # 멀티모달 컨텍스트 확보
+    trust_remote_code=True
+)
 
-# 2. 100B 모델(Claude 3.5 Sonnet)에게 보낼 멀티모달 프롬프트 Manifest 생성
-# 실제 환경에서는 대량의 S3 이미지 경로를 루프 돌며 JSONL 파일로 빌드합니다.
-raw_samples = [
+# 2. 멀티모달 합성 데이터 생성을 위한 정밀한 샘플링 가이드
+sampling_params = SamplingParams(
+    temperature=0.2,   # 지식 증류용 데이터이므로 일관성을 위해 낮게 세팅
+    max_tokens=1540,
+    top_p=0.9
+)
+
+# 3. 이미지, 비디오, 음성이 융합된 멀티모달 입력 예시 구조화
+# 실제 환경에서는 루프를 돌며 S3나 FSx for Lustre의 로컬 경로를 받아옵니다.
+omni_inputs = [
     {
-        "image_url": f"s3://{BUCKET_NAME}/raw_images/sample_001.jpg",
-        "image_format": "jpeg"
+        "prompt": "<|image|><|sound|>이 이미지의 시각적 요소와 오디오 가이드 음성의 연관성을 분석하고, 1B 모델 학습을 위한 고품질 VQA 세트를 작성해라.",
+        "multi_modal_data": {
+            "image": "./data/sample_img.jpg",
+            "sound": "./data/sample_audio.wav"
+        }
     },
     {
-        "image_url": f"s3://{BUCKET_NAME}/raw_images/sample_002.jpg",
-        "image_format": "jpeg"
+        "prompt": "<|video|>이 10초짜리 비디오의 프레임별 인과관계를 요약하고, 타임스탬프별 액션-답변 데이터셋을 추출해라.",
+        "multi_modal_data": {
+            "video": "./data/sample_video.mp4"
+        }
     }
 ]
 
-print("🔄 Bedrock Batch Inference용 JSONL 입력 파일 작성 중...")
-with open("bedrock_batch_input.jsonl", "w", encoding="utf-8") as f:
-    for idx, sample in enumerate(raw_samples):
-        # Bedrock Batch가 요구하는 개별 라인 포맷 정의
-        batch_record = {
-            "recordId": f"req-{idx:06d}",
-            "modelId": "anthropic.claude-3-5-sonnet-20240620-v1:0",
-            "modelInput": {
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 1024,
-                "temperature": 0.2, # 데이터 합성의 일관성을 위해 낮게 책정
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "s3",
-                                    "bucket": BUCKET_NAME,
-                                    "key": sample["image_url"].split(f"{BUCKET_NAME}/")[1]
-                                }
-                            },
-                            {
-                                "type": "text",
-                                "text": "이 이미지의 세부 객체, 배경, 인과관계를 단계별로 분석하여 아주 상세한 고품질 캡션을 작성해줘. 그리고 이 이미지를 기반으로 추론할 수 있는 복잡한 수준의 시각적 질의응답(VQA) 세트를 '질문:'과 '답변:' 형태로 3개 만들어줘."
-                            }
-                        ]
-                    }
-                ]
-            }
+# 4. 고성능 일괄 배칭(Batching) 추론 실행
+print("⚡ 멀티모달 배치 추론 가동 중...")
+outputs = llm.generate(omni_inputs, sampling_params)
+
+# 5. 추출된 데이터를 1B 모델의 '골든 데이터셋'으로 저장
+with open("omni_synthetic_dataset.jsonl", "w", encoding="utf-8") as f:
+    for idx, output in enumerate(outputs):
+        generated_text = output.outputs[0].text
+        result_node = {
+            "id": f"omni-{idx:06d}",
+            "teacher_prompt": omni_inputs[idx]["prompt"],
+            "distilled_response": generated_text
         }
-        f.write(json.dumps(batch_record, ensure_ascii=False) + "\n")
+        f.write(json.dumps(result_node, ensure_ascii=False) + "\n")
 
-# S3에 Manifest 업로드
-s3_client.upload_file("bedrock_batch_input.jsonl", BUCKET_NAME, MANIFEST_KEY)
-print(f"✅ Manifest 업로드 완료: s3://{BUCKET_NAME}/{MANIFEST_KEY}")
-
-# 3. Bedrock 비동기 Batch Job 생성 호출
-print("🚀 Bedrock 100B Model Batch Job 요청 중...")
-response = bedrock_client.create_model_invocation_job(
-    jobName="vlm-100b-data-generation-job",
-    modelId="anthropic.claude-3-5-sonnet-20240620-v1:0",
-    inputDataConfig={"s3InputDataConfig": {"s3Uri": f"s3://{BUCKET_NAME}/{MANIFEST_KEY}"}},
-    outputDataConfig={"s3OutputDataConfig": {"s3Uri": f"s3://{BUCKET_NAME}/outputs/"}},
-    roleArn="arn:aws:iam::your-account-id:role/service-role/AmazonBedrockExecutionRoleForJobs"
-)
-
-job_arn = response["jobArn"]
-print(f"✅ Job이 성공적으로 생성되었습니다. Job ARN: {job_arn}")
+print("✅ 100B Omni 모델로부터 지식 증류 데이터셋 추출 완료.")
 ```
+
+
+
