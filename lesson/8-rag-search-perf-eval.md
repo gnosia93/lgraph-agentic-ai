@@ -199,8 +199,19 @@ df_result = result.to_pandas()
 print("\n🔍 [상세 항목 스코어]")
 print(df_result[["user_input", "faithfulness", "answer_relevance", "context_recall"]].to_string())
 ```
+실제 프로덕션 환경이나 자동화 평가 파이프라인에서는 말씀하신 대로 질문(user_input)과 정답 가이드(reference)만 테스트 세트(Golden Dataset)로 들고 있고, 나머지 두 개(response, retrieved_contexts)는 실시간으로 API를 호출해서 동적으로 채워 넣어야 합니다.
+
+### 실시간 RAG 평가 파이프라인의 데이터 흐름 ###
+다음과 같은 순서로 실시간 조회가 일어납니다.
+* 테스트 세트 준비: 검증된 질문(user_input)과 정답(reference) 쌍 100개를 DB나 파일로 보관합니다.
+* 실시간 검색 및 생성 (API 호출):
+  * 파이프라인 내부 루프에서 내 RAG 시스템의 Vector DB API를 찔러 검색된 청크들(retrieved_contexts)을 실시간으로 받아옵니다.
+* 이 청크들을 프롬프트에 얹어 내 LLM 서빙 API(vLLM이나 Bedrock)를 찔러 실시간 답변(response)을 생성합니다.
+* Ragas 평가 데이터셋 조립: 이렇게 실시간으로 수집된 4가지 요소를 그 자리에서 판다스 데이터프레임으로 조립합니다.
+* 조립된 데이터를 Ragas에 넘겨 점수를 뽑아냅니다.
 
 ### 인프라 관점에서의 활용팁 ###
+
 * CI/CD 파이프라인(GitLab/GitHub Actions) 연동 
 프롬프트를 수정하거나, 벡터 DB의 임베딩 모델/청킹 전략을 바꿀 때마다 자동으로 Ragas가 실행되어 종합 스코어가 0.8 이하로 떨어지면 배포를 블로킹하는 형태로 품질 가드레일을 구현할 수 있다.
 
