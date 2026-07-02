@@ -27,8 +27,6 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
     - [응답 품질 (LLM-as-a-Judge)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/3-judge-as-a-llm.md) →  `실제 응답이 쓸만한가?`
     - [인퍼런스 벤치마킹](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/3-inference-benchmarking.md) →  `빠른가? 비용효율적인가?`
       
-* [L4. 파인튜닝하기 (인스트럭션 튜닝)](https://github.com/gnosia93/agentic-ai-eks/blob/main/lesson/4-finetune.md)
-
 * L5. RAG 파이프라인
    - [RAG 개요 (아키텍처와 동작 원리)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/5-rag-pipeline-concept.md)
    - [벡터DB 구축 (Milvus on EKS)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/5-milvus-install.md)
@@ -82,7 +80,8 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
 
 * [L14. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/14-post-training.md)
    - [정제 모델 생성(100B to 1B Distillation)](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation.md)
-
+   - [파인튜닝하기-인스트럭션 튜닝](https://github.com/gnosia93/agentic-ai-eks/blob/main/lesson/4-finetune.md)
+     
 ### _Appendix_ ###
 
 * [Prometheus / Loki Stack](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/a2-prometheus-loki.md)   
