@@ -27,58 +27,58 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
     - [응답 품질 (LLM-as-a-Judge)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/3-judge-as-a-llm.md) →  `실제 응답이 쓸만한가?`
     - [인퍼런스 벤치마킹](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/3-inference-benchmarking.md) →  `빠른가? 비용효율적인가?`
       
-* L5. RAG 파이프라인
+* L4. RAG 파이프라인
    - [RAG 개요 (아키텍처와 동작 원리)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/5-rag-pipeline-concept.md)
    - [벡터DB 구축 (Milvus on EKS)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/5-milvus-install.md)
    - [문서 처리 파이프라인 (레이아웃 파싱 → 청킹 → 임베딩)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/5-pdf-save.md)
    - [RAG 백엔드 구현 (검색 → 리랭킹 → 답변 생성)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/5-llm-call.md)
    - [MCP 서버로 배포 (EKS)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/5-rag-mcp.md)   <--- test 필요
          
-* [L6. LangGraph로 Agentic AI 만들기](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/6-agentic-ai.md)
+* [L5. LangGraph로 Agentic AI 만들기](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/6-agentic-ai.md)
    - [1. 프로젝트 생성](https://github.com/gnosia93/lg-agentic-ai/blob/main/lesson/langgraph/6-project-init.md)
        
-* [L7. 에이전트 가드레일 및 보안 강화](https://github.com/gnosia93/agentic-ai-eks/blob/main/lesson/7.guard-rail.md)
+* [L6. 에이전트 가드레일 및 보안 강화](https://github.com/gnosia93/agentic-ai-eks/blob/main/lesson/7.guard-rail.md)
    - [입력값 필터링(PII 마스킹 & InputSanitizer)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/7-security-input-filter.md)
    - [Prompt Injection 탐지 모델 적용 (Llama Guard 3)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/7-prompt-inject.md)
    - [에이전트 도구 호출 보안: SSRF 방지를 위한 네트워크 격리 (Egress 관리)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/7-security-ssrf.md)
    - 권한 제어: LangGraph를 이용한 Human-in-the-loop(승인 절차) 구현
    - [NVIDIA NeMo Guardrails](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/7-nemo-guardrails.md)
      
-* L8. AI 시스템 평가 파이프라인
+* L7. AI 시스템 평가 파이프라인
    - [RAG 검색 품질 평가](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/8-rag-search-perf-eval.md)
    - [LLM 답변 품질 평가](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/8-llm-response-eval.md)
    - [에이전트 행동 평가 (tool 선택, 실행 순서)](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/8-agent-behaviour-eval.md)
    - [골든 데이터셋 구축](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/8-golden-data.md)
      
     
-* L9. LLMOps
+* L8. LLMOps
    - [LLMOps의 개념](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/9-cicd-llmops.md)
    - [프롬프트 버전 관리](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/9-cicd-prompt-version.md)
    - [에이전트 로직 테스트 자동화](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/9-cicd-agent-test.md)
    - 깃랩으로 통합하기
      
-* L10. LLM 배포하기
+* L9. LLM 배포하기
    - [인퍼런스용 GPU 선정하기](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/10-model-fit-gpu.md)
    - [vLLM 인퍼런스 (Qwen2.5-72B)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/10-vllm-inference.md)  
    - [TensorRT-LLM 인퍼런스 (Qwen2.5-72B)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/10-tensorrt-inference.md)
    - [LLM 추론 성능(inference performance) 비교](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/10-llm-benchmark.md)
    - [KEDA 기반 오토 스케일링](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/10-keda-autoscaling.md)
         
-* L11. 멀티노드 인퍼런스 구성
+* L10. 멀티노드 인퍼런스 구성
    - [LeaderWorkerSet](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/11-LeaderWorkerSet.md)
    - [KubeRay](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/11-rayserve.md)
      
-* L12. 서빙 최적화
+* L11. 서빙 최적화
    - [Prefix Aware Routing](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-prefix-aware-routing.md)
    - [Model routing / cascading](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-model-routing.md)
       - [bifrost 게이트웨이](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-bifrost-fallback.md)
       - [LiteLLM](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-litellm.md)
    - https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-inference-optimization.md
 
-* L13. Observability
+* L12. Observability
    - [LangFuse 사용하기](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse.md)
 
-* [L14. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/14-post-training.md)
+* [L13. Post Training](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/14-post-training.md)
    - [정제 모델 생성하기(100B to 1B Distillation)](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/14-post-training-distillation.md)
    - [파인튜닝하기-인스트럭션 튜닝](https://github.com/gnosia93/agentic-ai-eks/blob/main/lesson/4-finetune.md)
      
