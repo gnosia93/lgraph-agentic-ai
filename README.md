@@ -49,7 +49,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
    - [LLM 답변 품질 평가](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/8-llm-response-eval.md)
    - [에이전트 행동 평가 (tool 선택, 실행 순서)](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/8-agent-behaviour-eval.md)
    - [골든 데이터셋 구축](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/8-golden-data.md)
-     
+   - https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/7-llm-eval-hands-on.md  
     
 * L8. LLMOps
    - [LLMOps의 개념](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/9-cicd-llmops.md)
