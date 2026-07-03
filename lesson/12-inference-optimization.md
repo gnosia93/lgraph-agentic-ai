@@ -1,5 +1,3 @@
-LLM 서빙 최적화는 주제가 풍부해요. Prefix-aware Routing 외에 강의(L13)에 넣을 만한 것들을 영역별로 정리할게요.
-
 ### 1. 배치·스케줄링
 
 * Continuous batching (in-flight batching): 요청을 정적 배치가 아니라 토큰 단위로 계속 끼워넣어 GPU를 꽉 채움. 처리량 핵심. (vLLM의 기본)
