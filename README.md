@@ -44,7 +44,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
    - 권한 제어: LangGraph를 이용한 Human-in-the-loop(승인 절차) 구현
    - [NVIDIA NeMo Guardrails](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/7-nemo-guardrails.md)
      
-* L7. AI 시스템 평가 파이프라인
+* L7. [AI 시스템 평가 파이프라인](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/7-llm-eval-basic.md)
    - [RAG 검색 품질 평가](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/8-rag-search-perf-eval.md)
    - [LLM 답변 품질 평가](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/8-llm-response-eval.md)
    - [에이전트 행동 평가 (tool 선택, 실행 순서)](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/8-agent-behaviour-eval.md)
