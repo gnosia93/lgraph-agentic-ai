@@ -97,5 +97,8 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
 * [Reasoning Model 모델](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/a10-reasoning.md)
 
 
+## 레퍼런스 ##
+
+* [Stanford CME295 Transformers & LLMs | Autumn 2025](https://www.youtube.com/watch?v=Ub3GoFaUcds&list=PLoROMvodv4rOCXd21gf0CF4xr35yINeOy)
 
 
