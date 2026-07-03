@@ -1,3 +1,5 @@
+## 추론 최적화 기술 모음 ##
+
 ### 1. 배치·스케줄링
 
 * Continuous batching (in-flight batching): 요청을 정적 배치가 아니라 토큰 단위로 계속 끼워넣어 GPU를 꽉 채움. 처리량 핵심. (vLLM의 기본)
