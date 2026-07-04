@@ -73,7 +73,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
    - [Model routing / cascading](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-model-routing.md)
       - [bifrost 게이트웨이](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-bifrost-fallback.md)
       - [LiteLLM](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/12-litellm.md)
-      - [Prompt Caching]()
+   - [Prompt Caching](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/lesson/10-prompt-caching.md)
 
 * L12. Observability
    - [LangFuse 사용하기](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/13-langfuse.md)
