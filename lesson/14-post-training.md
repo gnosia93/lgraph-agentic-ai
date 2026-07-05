@@ -74,5 +74,6 @@ tokenizer = AutoTokenizer.from_pretrained("out/qwen-pruned-2-4")
 > 모델 사이즈를 실제로 줄이는 방법에는 세가지 기법이 있다. 구조적 pruning은 레이어나 어텐션 헤드 자체를 제거하여 파라미터 수를 줄이는 방식이고, 양자화(Quantization)는 BF16에서 INT8이나 INT4로 데이터 타입을 변환하여 파라미터당 바이트 수를 줄이는 방식이다. 증류(Distillation)는 큰 모델(Teacher)의 지식을 작은 모델(Student)로 전달하여 처음부터 작은 모델을 만드는 방식이다. 이 중 양자화가 가장 간단하고 품질 손실 대비 효과가 크기 때문에 실무에서 가장 널리 사용된다.
 
 ## 레퍼런스 ##
+* [Stanford CME295 Transformers & LLMs | Autumn 2025 | Lecture 5 - LLM tuning](https://www.youtube.com/watch?v=PmW_TMQ3l0I)
 * https://github.com/NVIDIA/Model-Optimizer/tree/main 
 * https://developer.nvidia.com/blog/optimizing-llms-for-performance-and-accuracy-with-post-training-quantization/
