@@ -98,7 +98,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
 
 
 ## 레퍼런스 ##
-
+* [Complete Agentic AI Course - AI Agents, RAG, Embeddings, Architectures, Framework, VectorDB & Memory](https://www.youtube.com/watch?v=Pn95eOlw5qk)
 * [Stanford CME295 Transformers & LLMs | Autumn 2025](https://www.youtube.com/watch?v=Ub3GoFaUcds&list=PLoROMvodv4rOCXd21gf0CF4xr35yINeOy)
 * [Stanford CS25: Transformers United V6 | 언어 모델에서 네이티브 멀티모달 인텔리전스로](https://www.youtube.com/watch?v=NDdc39KYqDU)
 * [Stanford CME296 Diffusion & Large Vision Models | Spring 2026](https://www.youtube.com/watch?v=tr-CUpw--ck&t=533s)
