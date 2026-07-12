@@ -34,8 +34,7 @@ _Drawn using Nano Banana 2.0 with a rough prompt, Not perfect but it's amazing !
    - [RAG 백엔드 구현 (검색 → 리랭킹 → 답변 생성)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/5-llm-call.md)
    - [MCP 서버로 배포 (EKS)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/5-rag-mcp.md)   <--- test 필요
          
-* [L5. LangGraph로 Agentic AI 만들기](https://github.com/gnosia93/langgraph-agentic-ai/blob/main/lesson/6-agentic-ai.md)
-   - [1. 프로젝트 생성](https://github.com/gnosia93/lg-agentic-ai/blob/main/lesson/langgraph/6-project-init.md)
+* [L5. LangGraph로 Agentic AI 만들기](https://github.com/gnosia93/ai-agent/tree/main/labs)
        
 * [L6. 에이전트 가드레일 및 보안 강화](https://github.com/gnosia93/agentic-ai-eks/blob/main/lesson/7.guard-rail.md)
    - [입력값 필터링(PII 마스킹 & InputSanitizer)](https://github.com/gnosia93/eks-agentic-ai/blob/main/lesson/7-security-input-filter.md)
