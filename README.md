@@ -3,7 +3,7 @@
 # LangGraph Agentic AI  
 _This workshop is under construction, Not fully implemented yet_
 
-### AI 의 한계 ###
+### [AI 의 한계](https://github.com/gnosia93/lgraph-agentic-ai/blob/main/agent-limit.txt) ###
 * AI는 그럴듯하게 틀린다
 * 비위를 맞춘다 (원하는 방향으로 기울어줌)
 * 누락이 안 보인다 (뭘 빠뜨렸는지 티 안 남)
