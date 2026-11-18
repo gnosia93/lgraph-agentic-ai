@@ -2,6 +2,9 @@
 
 
 
+* [Tutorial: Human-in-the-loop AI for customer service with LangGraph and W&B Weave](https://forge.coreweave.com/wandb/ai-team-articles/Human-in-the-loop%20AI%20for%20customer%20service%20with%20LangGraph%20and%20W&B%20Weave/reports/Tutorial-Human-in-the-loop-AI-for-customer-service-with-LangGraph-and-W-B-Weave--VmlldzoxNzA0MjQyMQ)
+
+
 ***"LangGraph가 전체 작업 흐름(workflow)을 하나의 상태 머신(State Machine)으로 만들어 준다"***
 
 ### 1. 상태 머신(State Machine)이란? ###
