@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Qwen3 + LangGraph AI 채팅</title>
+    <style>
+        body { font-family: sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; background: #f4f4f9; }
+        #chat-box { height: 450px; overflow-y: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .msg { margin-bottom: 15px; line-height: 1.5; white-space: pre-wrap; }
+        .user { text-align: right; color: #1a73e8; font-weight: bold; }
+        .ai { text-align: left; color: #333; background: #f1f3f4; padding: 10px 15px; border-radius: 10px; }
+        .tool-status { font-size: 0.85em; color: #666; font-style: italic; margin-bottom: 5px; }
+        #input-area { display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+        button { padding: 12px 24px; background: #1a73e8; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; }
+        button:disabled { background: #aaa; }
+    </style>
+</head>
+<body>
+    <h2>🤖 Qwen3-8B + LangGraph 에이전트</h2>
+    <div id="chat-box"></div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="메시지를 입력하세요 (예: 서울 날씨 어때?)" onkeypress="if(event.key==='Enter') sendMessage()">
+        <button id="send-btn" onclick="sendMessage()">전송</button>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById("chat-box");
+        const userInput = document.getElementById("user-input");
+        const sendBtn = document.getElementById("send-btn");
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // 1. 사용자 메시지 화면에 추가
+            appendMessage("user", text);
+            userInput.value = "";
+            sendBtn.disabled = true;
+
+            // 2. AI 응답 말풍선 미리 생성
+            const aiDiv = document.createElement("div");
+            aiDiv.className = "msg ai";
+            chatBox.appendChild(aiDiv);
+
+            try {
+                const response = await fetch("/chat/stream", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: text, thread_id: "session_1" })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split("\n\n");
+
+                    for (const line of lines) {
+                        if (line.startsWith("data: ")) {
+                            const data = JSON.parse(line.replace("data: ", ""));
+
+                            if (data.type === "token") {
+                                aiDiv.textContent += data.content;
+                            } else if (data.type === "tool_start") {
+                                const status = document.createElement("div");
+                                status.className = "tool-status";
+                                status.textContent = `🔧 도구 실행 중: ${data.tool}...`;
+                                aiDiv.appendChild(status);
+                            } else if (data.type === "error") {
+                                aiDiv.textContent += `\n[에러 발생: ${data.message}]`;
+                            }
+                            chatBox.scrollTop = chatBox.scrollHeight;
+                        }
+                    }
+                }
+            } catch (err) {
+                aiDiv.textContent = "서버 연결 오류가 발생했습니다.";
+            } finally {
+                sendBtn.disabled = false;
+                userInput.focus();
+            }
+        }
+
+        function appendMessage(role, text) {
+            const div = document.createElement("div");
+            div.className = `msg ${role}`;
+            div.textContent = text;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
